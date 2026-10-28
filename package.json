@@ -1,7 +1,7 @@
 {
   "name": "ccaccounts",
   "version": "1.0.0",
-  "description": "Switch between multiple Claude Code accounts (CLI + local web UI). Windows, macOS, Linux.",
+  "description": "Use multiple Claude Code accounts side by side: one-click account switcher with a web UI and desktop window, per-folder accounts, shared settings and Claude in Chrome profiles. Windows, macOS, Linux.",
   "bin": {
     "ccaccounts": "bin/ccaccounts.js"
   },
@@ -29,9 +29,22 @@
   "keywords": [
     "claude",
     "claude-code",
+    "claude-code-accounts",
+    "claude-account-switcher",
+    "claude-in-chrome",
+    "anthropic",
+    "multiple-accounts",
+    "multi-account",
+    "account-switcher",
+    "switch-account",
+    "profiles",
+    "profile-manager",
+    "claude-config-dir",
     "accounts",
     "switcher",
+    "web-ui",
+    "desktop-app",
     "cli",
-    "multi-account"
+    "developer-tools"
   ]
 }

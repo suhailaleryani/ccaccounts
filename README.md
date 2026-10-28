@@ -2,19 +2,36 @@
 
 > Unofficial community tool. Not affiliated with or endorsed by Anthropic. "Claude" and "Claude Code" are Anthropic trademarks.
 
-Switch between multiple Claude Code accounts from a web UI or the command line.
-Works on Windows, macOS and Linux (Node 18+).
+**Use several Claude Code accounts side by side (work, personal, clients) and switch between them in one click.**
 
-Each account is a separate `CLAUDE_CONFIG_DIR` under `~/.ccaccounts/profiles/<name>`.
-Picking an account makes every new `claude` command use that account's login.
+[![tests](https://github.com/suhailaleryani/ccaccounts/actions/workflows/test.yml/badge.svg)](https://github.com/suhailaleryani/ccaccounts/actions/workflows/test.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![node >=18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
-## Install
+![ccaccounts web UI showing three Claude Code accounts with plan, notes and weekly activity](https://raw.githubusercontent.com/suhailaleryani/ccaccounts/main/docs/screenshot.png)
+
+Claude Code signs in to one account at a time. ccaccounts gives each account its own login and settings, so you can keep a work and a personal account (and a Claude in Chrome profile for each) without logging out and back in.
+
+- **One-click switching** from a web UI, a desktop-style window or the command line; every new `claude` uses the account you picked.
+- **Account per folder:** `claude` in a client's folder automatically uses that client's account.
+- **Or be asked:** optionally choose the account each time you type `claude`.
+- **Shared settings:** keep one `CLAUDE.md`, skills, agents and commands across accounts.
+- **Claude in Chrome:** a dedicated Chrome profile per account, so the extension signs in to the same account.
+- **See what each account is doing:** plan, 7-day activity, recent sessions you can resume, and a shortcut to claude.ai's usage page.
+- **Safe and small:** no dependencies, listens on `127.0.0.1` only, never sends your login anywhere.
+
+Works on Windows, macOS and Linux (Node 18+). Each account is a separate `CLAUDE_CONFIG_DIR` under `~/.ccaccounts/profiles/<name>`.
+
+## Quick start
 
 ```bash
-cd ccaccounts
-npm install -g .
-ccaccounts install        # adds a `claude` wrapper to your shell profile, then open a new terminal
+npm install -g ccaccounts
+ccaccounts install        # adds a `claude` wrapper to your shell profile; open a new terminal afterwards
+ccaccounts ui             # open the account picker, then click "+ Add account"
 ```
+
+Prefer to run it from source? `git clone https://github.com/suhailaleryani/ccaccounts && cd ccaccounts && npm install -g .`
 
 ## Claude in Chrome
 
