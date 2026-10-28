@@ -27,7 +27,9 @@ ccaccounts ui             # open the account picker in your browser
 ccaccounts import main    # adopt the login you already have
 ccaccounts add work       # new account; type /login in the window that opens
 ccaccounts use work       # switch (or click "Switch to this" in the UI)
+ccaccounts list           # all accounts (* = active)
 ccaccounts whoami
+ccaccounts remove old     # delete an account and its saved login
 ccaccounts run personal -p "hello"   # one-off as another account
 ```
 
@@ -102,8 +104,10 @@ ccaccounts autostart      # optional: open the window when you sign in ("autosta
 | Shell | How |
 |---|---|
 | bash, zsh, fish, PowerShell | `ccaccounts install` |
-| cmd.exe | can't define functions; type `ccaccounts claude` instead of `claude` |
-| IDEs / other tools | `ccaccounts env` prints the line that sets `CLAUDE_CONFIG_DIR` |
+| cmd.exe | can't define functions; type `ccaccounts claude` instead of `claude` (it also honours folder bindings and `ask`) |
+| IDEs / other tools | `ccaccounts env` prints the line that sets `CLAUDE_CONFIG_DIR` (it doesn't ask; it uses a bound folder's account or the active one) |
+
+After updating ccaccounts, run `ccaccounts install` again so your shell gets the latest wrapper. `ccaccounts uninstall` removes it.
 
 ## Limits
 
@@ -117,7 +121,7 @@ The UI listens on `127.0.0.1` only, rejects non-localhost `Host` headers, and re
 
 ## Contributing
 
-Issues and PRs welcome. The Windows and macOS code paths (terminal launcher, PowerShell profile install, Chrome launch) have had the least real-world testing, so reports from those platforms are especially useful. Run `npm test` before opening a PR.
+Issues and PRs welcome. The code is exercised on Windows (launchers, shortcuts, junction sharing) and Linux (tests, shortcut, autostart and the bash wrapper, run under WSL). The macOS paths (app bundle, LaunchAgent, Terminal launcher, Keychain behaviour) and Windows Terminal have had no real-world testing, so reports from those are especially useful. Run `npm test` before opening a PR.
 
 ## License
 
