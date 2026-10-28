@@ -33,6 +33,28 @@ ccaccounts run personal -p "hello"   # one-off as another account
 
 `ccaccounts help` lists everything.
 
+## Work folder
+
+Each account has a work folder: where its terminal starts. In the UI, **Open Claude** asks for the folder, pre-filled with the account's current one, with your recent folders listed to click. The folder you open with becomes the account's current one. A blank folder means your home folder. The **Add account** dialog has the same field.
+
+```bash
+ccaccounts add work --dir D:\Projects\myapp   # set at creation
+ccaccounts dir work                           # show
+ccaccounts dir work D:\Projects\other         # change (no path argument shows it; use "" to clear)
+```
+
+If the saved folder is later deleted, the terminal starts in your home folder instead.
+
+## Desktop app
+
+```bash
+ccaccounts app            # the UI in its own window (no tabs or address bar)
+ccaccounts shortcut       # add a Start Menu launcher (Windows), ~/Applications app (macOS) or .desktop entry (Linux)
+ccaccounts shortcut remove
+```
+
+`app` needs Chrome or Edge (Edge is tried first on Windows; set `CCACCOUNTS_BROWSER` to use another Chromium browser). It runs in its own browser profile, so it doesn't touch your Chrome accounts, and closing the window stops the local server. The macOS and Linux launchers have had little real-world testing.
+
 ## Shells
 
 | Shell | How |

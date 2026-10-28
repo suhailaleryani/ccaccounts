@@ -32,6 +32,29 @@ test('create, switch, list, remove', () => {
   core.removeProfile('work');
 });
 
+test('work folder: validate, persist, fall back, track recents', () => {
+  core.createProfile('wd');
+  const d1 = fs.mkdtempSync(path.join(os.tmpdir(), 'wd1-'));
+  const d2 = fs.mkdtempSync(path.join(os.tmpdir(), 'wd2-'));
+  assert.equal(core.getWorkDir('wd'), '');
+  assert.equal(core.launchDir('wd'), os.homedir());
+  assert.equal(core.setWorkDir('wd', d1), d1);
+  assert.equal(core.listProfiles().find((p) => p.name === 'wd').workDir, d1);
+  assert.throws(() => core.setWorkDir('wd', path.join(d1, 'missing')), /not found/i);
+  assert.throws(() => core.setWorkDir('wd', __filename), /Not a folder/);
+  assert.throws(() => core.setWorkDir('nope', d1), /No such/);
+  core.setWorkDir('wd', d2);
+  assert.deepEqual(core.getRecent().slice(0, 2), [d2, d1]); // newest first
+  core.setWorkDir('wd', d1);
+  assert.deepEqual(core.getRecent().slice(0, 2), [d1, d2]); // reuse moves to the front, no duplicates
+  fs.rmSync(d1, { recursive: true });
+  assert.equal(core.launchDir('wd'), os.homedir()); // deleted folder falls back to home
+  assert.ok(!core.getRecent().includes(d1));
+  assert.equal(core.setWorkDir('wd', ''), ''); // blank clears
+  assert.equal(core.getWorkDir('wd'), '');
+  core.removeProfile('wd');
+});
+
 test('hooks exist for each shell, cmd is rejected', () => {
   for (const s of ['bash', 'zsh', 'fish', 'powershell']) assert.match(shell.hookFor(s), /CLAUDE_CONFIG_DIR/);
   assert.throws(() => shell.hookFor('cmd'), /cmd.exe/);
@@ -59,5 +82,11 @@ test('UI server enforces token + host, and switches accounts', async () => {
   assert.equal(await post('api/use', { name: 'b' }, token), 200);
   assert.equal(core.getActive(), 'b');
   assert.equal(await post('api/use', { name: '../etc' }, token), 400);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wdui-'));
+  assert.equal(await post('api/workdir', { name: 'b', workDir: dir }, token), 200);
+  assert.equal(core.getWorkDir('b'), dir);
+  assert.equal(await post('api/workdir', { name: 'b', workDir: path.join(dir, 'nope') }, token), 400);
+  assert.equal(await post('api/add', { name: 'bad', workDir: path.join(dir, 'nope') }, token), 400);
+  assert.equal(core.exists('bad'), false); // failed add leaves no half-made account
   server.close();
 });

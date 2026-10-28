@@ -11,6 +11,8 @@ const flag = (name) => { const i = args.indexOf(name); if (i < 0) return null; r
 const HELP = `ccaccounts - switch between multiple Claude Code accounts
 
   ui [--port N]     open the web UI (account picker)
+  app               open the UI as a standalone desktop-style window (needs Chrome or Edge)
+  shortcut [remove] add (or remove) a Start Menu / Desktop / Applications launcher for \`app\`
   list [--json]     list accounts (* = active)
   use <name>        switch the active account for all new \`claude\` runs
   add <name> [--dir <path>]  create an account; signs in to Claude Code AND Claude in Chrome
@@ -51,6 +53,20 @@ try {
       require('../lib/ui').start({ port }).then(({ url }) => {
         console.log(`ccaccounts UI running at ${url}\nPress Ctrl+C to stop.`);
       }).catch((e) => die(e.message));
+      break;
+    }
+    case 'app': {
+      require('../lib/app').startApp().catch((e) => die(e.message));
+      break;
+    }
+    case 'shortcut': {
+      const app = require('../lib/app');
+      if (args[0] === 'remove') {
+        const r = app.removeShortcut();
+        console.log(r.length ? 'Removed:\n  ' + r.join('\n  ') : 'Nothing to remove.');
+      } else {
+        console.log('Created:\n  ' + app.createShortcut().join('\n  ') + '\nLaunch "ccaccounts" like any other app.');
+      }
       break;
     }
     case 'list': {
