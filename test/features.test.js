@@ -65,6 +65,34 @@ test('sessions: newest first, real prompt as title, skips agent/meta files', () 
   core.removeProfile('se');
 });
 
+test('activity: dedupes streamed replies, sums per local day, caches per file', async () => {
+  const activity = require('../lib/activity');
+  core.createProfile('ac');
+  const dir = path.join(core.profilePath('ac'), 'projects', 'p'); fs.mkdirSync(dir, { recursive: true });
+  const now = Date.now(), at = (hoursAgo) => new Date(now - hoursAgo * 3600000).toISOString();
+  const line = (id, ts, out, model = 'claude-opus-5') => JSON.stringify({ type: 'assistant', timestamp: ts,
+    message: { id, model, usage: { input_tokens: 10, output_tokens: out, cache_creation_input_tokens: 5, cache_read_input_tokens: 99999 } } }) + '\n';
+  const log = path.join(dir, 'a.jsonl');
+  fs.writeFileSync(log,
+    line('m1', at(1), 5) + line('m1', at(1), 50) +          // same reply streamed twice: counts once, final usage wins
+    line('m2', at(2), 20, 'claude-sonnet-5-5') +
+    line('m3', at(60), 30) +                                  // ~2.5 days ago
+    line('old', at(24 * 30), 1) +                             // outside the window
+    JSON.stringify({ type: 'user', message: { content: 'x' } }) + '\n');
+  const a = await activity.activity('ac', 7, now);
+  assert.equal(a.days.length, 7);
+  assert.equal(a.replies, 3);
+  assert.equal(a.tokens, (10 + 50 + 5) + (10 + 20 + 5) + (10 + 30 + 5)); // cache reads excluded
+  assert.equal(a.topModel, 'claude-opus-5');
+  assert.equal(a.days[6].date, activity.dayKey(new Date(now)));
+  assert.ok(a.days.slice(0, 3).every((d) => d.replies === 0)); // quiet days are zero-filled
+  assert.ok(fs.existsSync(path.join(core.root(), 'activity-cache.json')));
+  fs.writeFileSync(log, 'not json at all\n'); fs.utimesSync(log, new Date(now - 1000), new Date(now - 1000)); // changed file: re-read, not stale
+  assert.equal((await activity.activity('ac', 7, now)).replies, 0);
+  await assert.rejects(activity.activity('nope'), /No such/);
+  core.removeProfile('ac');
+});
+
 test('windows launcher scripts: cmd, powershell, Windows Terminal', () => {
   core.createProfile('w1');
   const scripts = path.join(os.tmpdir(), 'launch');
@@ -77,6 +105,33 @@ test('windows launcher scripts: cmd, powershell, Windows Terminal', () => {
   const wt = terminal.buildWin('w1', 'D:\\p', '', 'wt', scripts);
   assert.equal(wt.exe, 'wt.exe'); assert.deepEqual(wt.args.slice(0, 2), ['-d', 'D:\\p']);
   core.removeProfile('w1');
+});
+
+test('ask prompt: parse answers, skip non-interactive runs, abort cleanly', async () => {
+  const { PassThrough } = require('stream');
+  const pick = require('../lib/pick');
+  const ps = [{ name: 'work', email: 'w@x.io' }, { name: 'Personal', email: null }];
+  assert.equal(pick.parseAnswer('', ps, 'work'), 'work');          // Enter = default
+  assert.equal(pick.parseAnswer('2', ps, 'work'), 'Personal');
+  assert.equal(pick.parseAnswer('personal', ps, 'work'), 'Personal'); // name, any case
+  assert.equal(pick.parseAnswer('3', ps, 'work'), null);
+  assert.equal(pick.parseAnswer('zzz', ps, 'work'), null);
+  for (const a of [['-p', 'hi'], ['--version'], ['mcp', 'list'], ['config', 'get'], ['update']]) assert.equal(pick.isInteractiveRun(a), false, a.join(' '));
+  for (const a of [[], ['fix the bug'], ['--resume', 'x'], ['--model', 'opus']]) assert.equal(pick.isInteractiveRun(a), true, a.join(' '));
+
+  const run = (typed) => { const input = new PassThrough(), output = new PassThrough(); let text = '';
+    output.on('data', (c) => (text += c)); const p = pick.choose(ps, 'work', { input, output }); input.write(typed); return p.then((r) => [r, text]); };
+  const [r1, shown] = await run('2\n');
+  assert.equal(r1, 'Personal'); assert.match(shown, /1\) work  w@x\.io   \(default\)/); assert.match(shown, /2\) Personal/);
+  assert.equal((await run('\n'))[0], 'work');
+  assert.equal((await run('9\nx\ny\n'))[0], null);                  // three bad answers give up
+  const input = new PassThrough(), output = new PassThrough(); const p = pick.choose(ps, 'work', { input, output }); input.end();
+  assert.equal(await p, null);                                       // Ctrl+D / closed input
+
+  core.setConfig({ askProfile: true }); assert.equal(core.getConfig().askProfile, true);
+  core.setConfig({ askProfile: false }); assert.equal(core.getConfig().askProfile, false);
+  const shell = require('../lib/shell');
+  for (const s of ['bash', 'zsh', 'fish', 'powershell']) assert.match(shell.hookFor(s), /130/, s); // wrappers honour "cancelled"
 });
 
 test('icon: valid PNG and ICO', () => {
@@ -114,6 +169,9 @@ test('UI API: settings, sessions, resume validation, favicon', async () => {
   assert.equal(core.getSettings('u1').note, 'hi');
   assert.equal((await post('api/settings', { name: 'u1', settings: { args: 'a; b' } })).code, 400);
   assert.deepEqual(JSON.parse((await post('api/sessions', { name: 'u1' })).body), { sessions: [] });
+  assert.equal((await post('api/sessions', { name: 'u1', limit: 9999 })).code, 200); // limit is clamped, not an error
+  const act = JSON.parse((await post('api/activity', { name: 'u1' })).body);
+  assert.equal(act.days.length, 7); assert.equal(act.replies, 0);
   assert.equal((await post('api/resume', { name: 'u1', id: '../../x', cwd: os.tmpdir() })).code, 400); // id must be a UUID
   const st = JSON.parse((await raw('api/state', { headers: { 'x-token': token } })).body);
   assert.equal(st.profiles[0].note, 'hi'); assert.equal(typeof st.win, 'boolean');

@@ -73,7 +73,18 @@ The first account to share an item donates its copy; later accounts keep their o
 
 - **Settings** (UI button, or `ccaccounts set <name> <note|color|args|terminal> <value>`): a note, an avatar colour, extra options passed to `claude` when the UI opens a terminal (for example `--model opus`), and on Windows the terminal to use: Command Prompt (default), PowerShell or Windows Terminal. Extra options accept plain flags only (no `; & | " < >`).
 - **Health:** each card shows the plan (from the saved login) and the organisation, and flags **LOGIN EXPIRED** when the saved login can no longer renew itself. An expired access token alone is normal, since Claude Code refreshes it. Your tokens are never sent to the page.
-- **Sessions** (UI button, or `ccaccounts sessions <name>`): the account's recent conversations. Click one to continue it in a new terminal (`claude --resume`).
+- **Sessions** (UI button, or `ccaccounts sessions <name>`): the account's 40 most recent conversations, searchable by prompt or folder. Click one to continue it in a new terminal (`claude --resume`).
+- **Activity:** each card shows replies and tokens for the last 7 days, with a bar per day and the most used model, read from the account's local session logs (cache reads are not counted). Claude Code doesn't store plan limits locally, so this shows what you used, not what is left. Results are cached by file, so after the first read it is instant.
+
+## Ask which account when you run `claude`
+
+```bash
+ccaccounts ask on         # then re-run `ccaccounts install` once so the shell wrapper can ask
+claude                    # -> "Which Claude account for this session?"  1) work  2) personal
+ccaccounts ask off
+```
+
+Type a number or a name; Enter picks the default (the active account). Ctrl+C or Ctrl+D cancels, and `claude` does not start. The choice applies to that run only; it doesn't change the active account. It never asks for folders bound to an account, for non-interactive use (`claude -p`, `--version`, `mcp`, `config`, `update`, piped input) or when there is only one account.
 
 ## Desktop app
 

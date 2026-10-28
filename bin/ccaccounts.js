@@ -24,6 +24,7 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   chrome <name>     open this account's Chrome profile (claude.ai login + extension)
   import <name>     adopt your existing Claude Code login as an account
   whoami            show the account in effect here (active, or bound to this folder)
+  ask [on|off]      ask which account to use each time you run plain \`claude\` (needs the shell wrapper)
   bind <name> [dir] always use this account in a folder and below (default: current folder)
   unbind [dir]      remove a folder binding; \`bind\` alone lists them
   share <name> [item [on|off]]  share CLAUDE.md, settings.json, skills, agents, commands
@@ -35,6 +36,18 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   uninstall [shell] remove it
   hook [shell]      print the wrapper (bash, zsh, fish, powershell)
   env [shell]       print the line that sets CLAUDE_CONFIG_DIR (for IDEs/scripts)`;
+
+// Account for a `claude` run: a bound folder wins; otherwise, with `ask on` and a real terminal, ask; else the active one.
+// Exits 130 if the user aborts the prompt (the wrapper then does not start claude).
+async function pickAccount(runArgs) {
+  const r = core.resolveAccount();
+  if (r.boundTo || !core.getConfig().askProfile) return r.name;
+  const pick = require('../lib/pick'), ps = core.listProfiles();
+  if (ps.length < 2 || !process.stdin.isTTY || !process.stderr.isTTY || !pick.isInteractiveRun(runArgs)) return r.name;
+  const n = await pick.choose(ps, r.name);
+  if (!n) process.exit(130);
+  return n;
+}
 
 function openChrome(name) {
   chrome.openProfile(name);
@@ -184,13 +197,24 @@ try {
     }
     case 'run': { const n = args.shift(); process.exitCode = core.runClaude(n, args); break; }
     case 'claude': {
-      const n = core.resolveAccount().name;
-      if (!n) die('No active account. Try: ccaccounts add <name>');
-      process.exitCode = core.runClaude(n, args);
+      pickAccount(args).then((n) => {
+        if (!n) die('No active account. Try: ccaccounts add <name>');
+        process.exitCode = core.runClaude(n, args);
+      }).catch((e) => die(e.message));
+      break;
+    }
+    case 'ask': {
+      if (args[0] === 'on' || args[0] === 'off') core.setConfig({ askProfile: args[0] === 'on' });
+      const on = core.getConfig().askProfile;
+      console.log(`Ask which account when you run \`claude\`: ${on ? 'ON' : 'OFF'}` +
+        (args[0] === 'on' ? '\nRe-run `ccaccounts install` once so the shell wrapper can ask. Folders bound to an account never ask.' : ''));
       break;
     }
     case 'remove': core.removeProfile(args[0]); console.log(`Removed "${args[0]}"`); break;
-    case 'path': { const n = core.resolveAccount().name; if (n) console.log(core.profilePath(n)); break; }
+    case 'path': { // used by the shell wrapper; args are the arguments `claude` was run with
+      pickAccount(args).then((n) => { if (n) console.log(core.profilePath(n)); }).catch((e) => die(e.message));
+      break;
+    }
     case 'hook': console.log(shell.hookFor(args[0] || shell.detectShell())); break;
     case 'env': {
       const n = core.resolveAccount().name;
