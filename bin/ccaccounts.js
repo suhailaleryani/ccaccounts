@@ -22,7 +22,8 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   add <name> [--dir <path>]  create an account; signs in to Claude Code AND Claude in Chrome
   dir <name> [path]  show or set the account's work folder (UI "Open Claude" starts there)
   login <name>      sign in again (Claude Code + Chrome)
-  chrome <name>     open this account's Chrome profile (claude.ai login + extension)
+  usage <name>      open claude.ai's plan usage page (weekly limits) in this account's Chrome profile
+  chrome <name>    open this account's Chrome profile (claude.ai login + extension)
   import <name>     adopt your existing Claude Code login as an account
   whoami            show the account in effect here (active, or bound to this folder)
   ask [on|off]      ask which account to use each time you run plain \`claude\` (needs the shell wrapper)
@@ -203,6 +204,12 @@ try {
       const name = args.find((a) => !a.startsWith('--'));
       if (!core.exists(name)) die(`No such account: ${name}`);
       signIn(name, args.includes('--no-chrome'));
+      break;
+    }
+    case 'usage': {
+      if (!core.exists(args[0])) die(`No such account: ${args[0]}`);
+      chrome.openProfile(args[0], { install: false, url: chrome.USAGE_URL });
+      console.log(`Opened ${chrome.USAGE_URL} in "${args[0]}"'s Chrome profile (sign in there first if asked).`);
       break;
     }
     case 'chrome': {

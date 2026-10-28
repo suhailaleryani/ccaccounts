@@ -30,3 +30,16 @@ test('openProfile launches the per-account profile with login + store pages', { 
   assert.ok(args.includes(chrome.LOGIN_URL));
   assert.ok(args.includes(chrome.STORE_URL)); // extension not installed yet -> store page opens too
 });
+
+test('usage page opens alone in the account profile (no login or store tab)', { skip: process.platform === 'win32' || process.platform === 'darwin' }, async () => {
+  const out = path.join(tmp, 'args-usage.txt');
+  const exe = path.join(tmp, 'fake-chrome-usage');
+  fs.writeFileSync(exe, `#!/bin/sh\nprintf '%s\\n' "$@" > "${out}"\n`, { mode: 0o755 });
+  process.env.CCACCOUNTS_BROWSER = exe;
+  chrome.openProfile('personal', { install: false, url: chrome.USAGE_URL });
+  for (let i = 0; i < 50 && !fs.existsSync(out); i++) await new Promise((r) => setTimeout(r, 40));
+  const args = fs.readFileSync(out, 'utf8').trim().split('\n');
+  assert.ok(args.includes('--profile-directory=ccaccounts-personal'));
+  assert.ok(args.includes('https://claude.ai/settings/usage'));
+  assert.ok(!args.includes(chrome.LOGIN_URL) && !args.includes(chrome.STORE_URL));
+});
