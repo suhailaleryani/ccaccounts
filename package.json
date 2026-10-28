@@ -18,6 +18,14 @@
     "node": ">=18"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suhailaleryani/ccaccounts.git"
+  },
+  "homepage": "https://github.com/suhailaleryani/ccaccounts#readme",
+  "bugs": {
+    "url": "https://github.com/suhailaleryani/ccaccounts/issues"
+  },
   "keywords": [
     "claude",
     "claude-code",
