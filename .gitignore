@@ -1,0 +1,4 @@
+node_modules/
+.ccswitch/
+*.log
+.DS_Store
