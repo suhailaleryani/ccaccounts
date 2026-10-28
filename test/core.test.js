@@ -55,6 +55,61 @@ test('work folder: validate, persist, fall back, track recents', () => {
   core.removeProfile('wd');
 });
 
+test('shared items: adopt, link, back up, unshare keeps a copy, delete spares the store', () => {
+  const share = require('../lib/share');
+  core.createProfile('sa'); core.createProfile('sb');
+  const sa = core.profilePath('sa'), sb = core.profilePath('sb');
+  fs.mkdirSync(path.join(sa, 'skills')); fs.writeFileSync(path.join(sa, 'skills', 'one.md'), 'one');
+  fs.writeFileSync(path.join(sa, 'CLAUDE.md'), 'rules');
+  fs.mkdirSync(path.join(sb, 'skills')); fs.writeFileSync(path.join(sb, 'skills', 'mine.md'), 'mine');
+
+  share.setShared('sa', 'skills', true);   // sa's copy becomes the shared one
+  share.setShared('sa', 'CLAUDE.md', true);
+  assert.equal(share.status('sa').skills, true);
+  assert.equal(fs.readFileSync(path.join(sa, 'skills', 'one.md'), 'utf8'), 'one');
+
+  share.setShared('sb', 'skills', true);   // sb joins: its own skills are kept as a backup
+  assert.equal(fs.readFileSync(path.join(sb, 'skills', 'one.md'), 'utf8'), 'one');
+  const backup = fs.readdirSync(sb).find((f) => f.startsWith('skills.backup-'));
+  assert.ok(backup && fs.existsSync(path.join(sb, backup, 'mine.md')));
+
+  fs.writeFileSync(path.join(sa, 'skills', 'two.md'), 'two'); // edit through one account...
+  assert.ok(fs.existsSync(path.join(sb, 'skills', 'two.md'))); // ...visible in the other
+
+  share.setShared('sb', 'skills', false);  // unshare: private copy, shared store untouched
+  assert.equal(share.status('sb').skills, false);
+  assert.ok(fs.existsSync(path.join(sb, 'skills', 'two.md')));
+  assert.ok(fs.existsSync(path.join(share.sharedRoot(), 'skills', 'two.md')));
+  assert.throws(() => share.setShared('sb', 'nope', true), /Unknown item/);
+
+  core.removeProfile('sa');                // deleting a linked account must not touch the store
+  assert.ok(fs.existsSync(path.join(share.sharedRoot(), 'skills', 'one.md')));
+  assert.equal(fs.readFileSync(path.join(share.sharedRoot(), 'CLAUDE.md'), 'utf8'), 'rules');
+  core.removeProfile('sb');
+});
+
+test('folder bindings: deepest match wins, falls back to active, cleaned on remove', () => {
+  core.createProfile('ba'); core.createProfile('bb');
+  core.setActive('ba');
+  const top = fs.mkdtempSync(path.join(os.tmpdir(), 'bind-'));
+  const sub = path.join(top, 'client'); fs.mkdirSync(path.join(sub, 'deep'), { recursive: true });
+  const other = fs.mkdtempSync(path.join(os.tmpdir(), 'bind2-'));
+  core.bindFolder('bb', top);
+  assert.deepEqual(core.resolveAccount(top), { name: 'bb', boundTo: top });
+  assert.equal(core.resolveAccount(path.join(sub, 'deep')).name, 'bb');      // subfolders inherit
+  assert.deepEqual(core.resolveAccount(other), { name: 'ba', boundTo: null }); // elsewhere: active
+  assert.equal(core.resolveAccount(top + '-sibling').name, 'ba');             // prefix of a name is not a parent
+  core.bindFolder('ba', sub);
+  assert.equal(core.resolveAccount(path.join(sub, 'deep')).name, 'ba');       // deepest wins
+  assert.equal(core.resolveAccount(top).name, 'bb');
+  assert.throws(() => core.bindFolder('ba', path.join(top, 'missing')), /not found/i);
+  assert.equal(core.unbindFolder(sub), true);
+  assert.equal(core.unbindFolder(sub), false);
+  core.removeProfile('bb');
+  assert.equal(core.resolveAccount(top).name, 'ba'); // binding went with the account
+  core.removeProfile('ba');
+});
+
 test('hooks exist for each shell, cmd is rejected', () => {
   for (const s of ['bash', 'zsh', 'fish', 'powershell']) assert.match(shell.hookFor(s), /CLAUDE_CONFIG_DIR/);
   assert.throws(() => shell.hookFor('cmd'), /cmd.exe/);

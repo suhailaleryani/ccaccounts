@@ -20,7 +20,11 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   login <name>      sign in again (Claude Code + Chrome)
   chrome <name>     open this account's Chrome profile (claude.ai login + extension)
   import <name>     adopt your existing Claude Code login as an account
-  whoami            show the active account
+  whoami            show the account in effect here (active, or bound to this folder)
+  bind <name> [dir] always use this account in a folder and below (default: current folder)
+  unbind [dir]      remove a folder binding; \`bind\` alone lists them
+  share <name> [item [on|off]]  share CLAUDE.md, settings.json, skills, agents, commands
+                    across accounts (one copy for all); no item lists the status
   run <name> ...    run claude once as another account
   claude ...        run claude as the active account (works in cmd.exe)
   remove <name>     delete an account and its saved login
@@ -87,9 +91,38 @@ try {
       break;
     }
     case 'whoami': {
-      const p = core.listProfiles().find((x) => x.active);
+      const r = core.resolveAccount();
+      const p = core.listProfiles().find((x) => x.name === r.name);
       if (!p) die('No active account. Try: ccaccounts add <name>');
-      console.log(`${p.name}${p.email ? '  ' + p.email : ''}`);
+      console.log(`${p.name}${p.email ? '  ' + p.email : ''}${r.boundTo ? `  (bound to ${r.boundTo})` : ''}`);
+      break;
+    }
+    case 'bind': {
+      if (!args.length) {
+        const b = core.getBindings();
+        console.log(b.length ? b.map((x) => `${x.dir}  ->  ${x.name}`).join('\n') : 'No folder bindings. Try: ccaccounts bind <name> [folder]');
+        break;
+      }
+      if (!core.exists(args[0])) die(`No such account: ${args[0]}`);
+      console.log(`"${args[0]}" is now used for ${core.bindFolder(args[0], args[1] || process.cwd())} and everything below it.`);
+      break;
+    }
+    case 'unbind': {
+      const d = args[0] || process.cwd();
+      console.log(core.unbindFolder(d) ? `Unbound ${d}` : `Nothing bound at ${d}`);
+      break;
+    }
+    case 'share': {
+      const share = require('../lib/share');
+      if (!core.exists(args[0])) die(`No such account: ${args[0]}`);
+      if (!args[1]) {
+        const st = share.status(args[0]);
+        for (const i of share.ITEMS) console.log(`${st[i.id] ? '[shared]  ' : '[separate]'} ${i.id}`);
+        break;
+      }
+      const on = args[2] !== 'off';
+      share.setShared(args[0], args[1], on);
+      console.log(`${args[1]} is now ${on ? 'shared (' + share.sharedRoot() + ')' : 'separate (private copy kept)'} for "${args[0]}".`);
       break;
     }
     case 'add': {
@@ -127,16 +160,16 @@ try {
     }
     case 'run': { const n = args.shift(); process.exitCode = core.runClaude(n, args); break; }
     case 'claude': {
-      const n = core.getActive();
+      const n = core.resolveAccount().name;
       if (!n) die('No active account. Try: ccaccounts add <name>');
       process.exitCode = core.runClaude(n, args);
       break;
     }
     case 'remove': core.removeProfile(args[0]); console.log(`Removed "${args[0]}"`); break;
-    case 'path': { const n = core.getActive(); if (n) console.log(core.profilePath(n)); break; }
+    case 'path': { const n = core.resolveAccount().name; if (n) console.log(core.profilePath(n)); break; }
     case 'hook': console.log(shell.hookFor(args[0] || shell.detectShell())); break;
     case 'env': {
-      const n = core.getActive();
+      const n = core.resolveAccount().name;
       if (!n) die('No active account');
       console.log(shell.envLine(args[0] || shell.detectShell(), core.profilePath(n)));
       break;

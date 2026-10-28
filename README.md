@@ -45,6 +45,30 @@ ccaccounts dir work D:\Projects\other         # change (no path argument shows i
 
 If the saved folder is later deleted, the terminal starts in your home folder instead.
 
+## Folder → account
+
+Bind a folder to an account and `claude` run in that folder (or any folder below it) uses that account, with no manual switching. The deepest bound folder wins; anywhere else uses the active account.
+
+```bash
+ccaccounts bind work D:\Projects\clientA   # or: cd there and run `ccaccounts bind work`
+ccaccounts bind                            # list bindings
+ccaccounts unbind D:\Projects\clientA
+ccaccounts whoami                          # account in effect in the current folder
+```
+
+In the UI, tick **Always use this account in this folder** in the Open Claude dialog; bound folders show on the card with a × to unbind. This works through the shell wrapper (`ccaccounts install`) or `ccaccounts claude`.
+
+## Shared settings
+
+A new account starts empty. Share `CLAUDE.md`, `settings.json`, `skills`, `agents` or `commands` so every account that opts in uses one copy:
+
+```bash
+ccaccounts share work            # show what is shared
+ccaccounts share work skills     # share (use "off" to stop)
+```
+
+The first account to share an item donates its copy; later accounts keep their own version beside the link as `<item>.backup-<time>`. Turning sharing off gives that account a private copy. Items are symlinks (directories use junctions on Windows, so no admin rights are needed; files fall back to a hard link). Sharing `settings.json` also shares anything account-specific in it, so check it first. Deleting an account never touches the shared copy. The UI has a **Shared** button per account.
+
 ## Desktop app
 
 ```bash
