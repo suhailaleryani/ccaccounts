@@ -78,6 +78,15 @@ The first account to share an item donates its copy; later accounts keep their o
 - **Sessions** (UI button, or `ccaccounts sessions <name>`): the account's 40 most recent conversations, searchable by prompt or folder. Click one to continue it in a new terminal (`claude --resume`).
 - **Activity:** each card shows replies and tokens for the last 7 days, with a bar per day and the most used model, read from the account's local session logs (cache reads are not counted). Claude Code doesn't store plan limits locally, so this shows what you used, not what is left. Results are cached by file, so after the first read it is instant.
 
+## Updating
+
+The UI header has two buttons: **Refresh** reloads the account list, and **Update** checks for a newer ccaccounts and installs it. From the terminal: `ccaccounts update` (or `ccaccounts update --check` to only look).
+
+- **Installed from a git clone** (`npm install -g .`): it runs `git fetch` and, if there are new commits, `git pull --ff-only`. It refuses when the clone has uncommitted changes or local commits that aren't on the remote, and tells you why.
+- **Installed from npm:** it asks the npm registry for the latest version and runs `npm install -g ccaccounts@latest`.
+
+Nothing is checked automatically: it only contacts GitHub or npm when you press the button or run the command. The dialog shows the exact command before anything is installed. Restart ccaccounts afterwards to use the new version.
+
 ## Ask which account when you run `claude`
 
 ```bash

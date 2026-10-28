@@ -13,7 +13,8 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   ui [--port N]     open the web UI (account picker)
   app               open the UI as a standalone desktop-style window (needs Chrome or Edge)
   shortcut [remove] add (or remove) a Start Menu / Desktop / Applications launcher for \`app\`
-  autostart [off]   open the app window when you sign in to your computer
+  update [--check] check for a newer ccaccounts and install it (git clone or npm); --check only looks
+  autostart [off] open the app window when you sign in to your computer
   set <name> [note|color|args|terminal <value>]  per-account settings (UI "Settings"); no key shows them
   sessions <name>   recent Claude Code sessions of an account (resume them from the UI)
   list [--json]     list accounts (* = active)
@@ -77,6 +78,20 @@ try {
     }
     case 'app': {
       require('../lib/app').startApp().catch((e) => die(e.message));
+      break;
+    }
+    case 'update': {
+      const upd = require('../lib/update');
+      upd.checkUpdate().then(async (c) => {
+        console.log(c.message);
+        if (c.blocker) console.log(c.blocker);
+        if (c.status !== 'available' || !c.canUpdate || args.includes('--check')) return;
+        console.log(`Running: ${c.command}`);
+        const r = await upd.applyUpdate();
+        if (r.output) console.log(r.output);
+        console.log(r.message);
+        if (!r.ok) process.exitCode = 1;
+      }).catch((e) => die(e.message));
       break;
     }
     case 'autostart': {
