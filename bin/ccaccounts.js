@@ -13,7 +13,8 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   ui [--port N]     open the web UI (account picker)
   list [--json]     list accounts (* = active)
   use <name>        switch the active account for all new \`claude\` runs
-  add <name>        create an account; signs in to Claude Code AND Claude in Chrome
+  add <name> [--dir <path>]  create an account; signs in to Claude Code AND Claude in Chrome
+  dir <name> [path]  show or set the account's work folder (UI "Open Claude" starts there)
   login <name>      sign in again (Claude Code + Chrome)
   chrome <name>     open this account's Chrome profile (claude.ai login + extension)
   import <name>     adopt your existing Claude Code login as an account
@@ -77,10 +78,18 @@ try {
     }
     case 'add': {
       const noChrome = args.includes('--no-chrome');
+      const dir = flag('--dir');
       const name = args.find((a) => !a.startsWith('--'));
       core.createProfile(name);
+      if (dir) { try { core.setWorkDir(name, dir); } catch (e) { core.removeProfile(name); throw e; } }
       console.log(`Created "${name}".`);
       signIn(name, noChrome);
+      break;
+    }
+    case 'dir': {
+      if (!core.exists(args[0])) die(`No such account: ${args[0]}`);
+      if (args.length > 1) console.log(`Work folder: ${core.setWorkDir(args[0], args[1]) || '(cleared)'}`);
+      else console.log(core.getWorkDir(args[0]) || '(not set - uses home)');
       break;
     }
     case 'import': {
