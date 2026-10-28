@@ -26,12 +26,12 @@ Works on Windows, macOS and Linux (Node 18+). Each account is a separate `CLAUDE
 ## Quick start
 
 ```bash
-npm install -g ccaccounts
+npm install -g github:suhailaleryani/ccaccounts
 ccaccounts install        # adds a `claude` wrapper to your shell profile; open a new terminal afterwards
 ccaccounts ui             # open the account picker, then click "+ Add account"
 ```
 
-Prefer to run it from source? `git clone https://github.com/suhailaleryani/ccaccounts && cd ccaccounts && npm install -g .`
+Needs Node 18+ and git. (It isn't on the npm registry yet, so install straight from GitHub as above.) Prefer a local clone you can edit? `git clone https://github.com/suhailaleryani/ccaccounts && cd ccaccounts && npm install -g .`
 
 ## Claude in Chrome
 
@@ -101,7 +101,8 @@ The first account to share an item donates its copy; later accounts keep their o
 The UI header has two buttons: **Refresh** reloads the account list, and **Update** checks for a newer ccaccounts and installs it. From the terminal: `ccaccounts update` (or `ccaccounts update --check` to only look).
 
 - **Installed from a git clone** (`npm install -g .`): it runs `git fetch` and, if there are new commits, `git pull --ff-only`. It refuses when the clone has uncommitted changes or local commits that aren't on the remote, and tells you why.
-- **Installed from npm:** it asks the npm registry for the latest version and runs `npm install -g ccaccounts@latest`.
+- **Installed with `npm install -g github:suhailaleryani/ccaccounts`:** it reads the latest version from the repo's `main` branch and, if newer, runs the same `npm install -g github:suhailaleryani/ccaccounts` again.
+- **Installed from the npm registry** (once published): it asks npm for the latest version and runs `npm install -g <package>@latest`.
 
 Nothing is checked automatically: it only contacts GitHub or npm when you press the button or run the command. The dialog shows the exact command before anything is installed. Restart ccaccounts afterwards to use the new version.
 

@@ -93,6 +93,31 @@ test('npm install: newer, current, unpublished, offline (runner is mocked)', asy
   assert.equal(none.ok, false); // nothing to apply
 });
 
+test('installed from GitHub (not on npm): updates from the repo main branch', async () => {
+  const dir = path.join(tmp('upd-gh-'), 'node_modules', 'ccaccounts'); fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'ccaccounts', version: '1.0.0',
+    repository: { type: 'git', url: 'git+https://github.com/suhailaleryani/ccaccounts.git' } }));
+  assert.equal(update.githubRepo(dir), 'suhailaleryani/ccaccounts');
+  const e404 = async () => ({ code: 1, stdout: '', stderr: 'npm error code E404' });
+  const urls = [];
+  const remote = (v) => async (url) => { urls.push(url); return v == null ? null : JSON.stringify({ version: v }); };
+
+  let c = await update.checkUpdate({ dir, runner: e404, fetcher: remote('1.1.0') });
+  assert.equal(c.status, 'available'); assert.equal(c.command, 'npm install -g github:suhailaleryani/ccaccounts'); assert.equal(c.canUpdate, true);
+  assert.deepEqual(urls, ['https://raw.githubusercontent.com/suhailaleryani/ccaccounts/main/package.json']);
+  assert.equal((await update.checkUpdate({ dir, runner: e404, fetcher: remote('1.0.0') })).status, 'current');
+  assert.equal((await update.checkUpdate({ dir, runner: e404, fetcher: remote(null) })).status, 'error'); // offline / blocked
+
+  const calls = [];
+  const r = await update.applyUpdate({ dir, fetcher: remote('1.1.0'),
+    runner: async (cmd, args) => { calls.push([cmd, ...args].join(' ')); return cmd === 'npm' && args[0] === 'view' ? { code: 1, stdout: '', stderr: 'E404' } : { code: 0, stdout: 'ok', stderr: '' }; } });
+  assert.equal(r.ok, true); assert.deepEqual(calls, ['npm view ccaccounts version', 'npm install -g github:suhailaleryani/ccaccounts']);
+
+  // only plain GitHub repos are trusted as an update source
+  const other = tmp('upd-other-'); fs.writeFileSync(path.join(other, 'package.json'), JSON.stringify({ name: 'x', version: '1.0.0', repository: { url: 'https://evil.example/a/b.git' } }));
+  assert.equal(update.githubRepo(other), '');
+});
+
 test('unknown install cannot update itself', async () => {
   const dir = tmp('upd-unk-'); setVersion(dir, '1.0.0');
   const c = await update.checkUpdate({ dir, runner: async () => { throw new Error('must not run anything'); } });
