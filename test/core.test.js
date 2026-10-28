@@ -6,7 +6,7 @@ const os = require('os');
 const path = require('path');
 const http = require('http');
 
-process.env.CCSWITCH_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'ccswitch-'));
+process.env.CCACCOUNTS_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'ccaccounts-'));
 const core = require('../lib/core');
 const shell = require('../lib/shell');
 const ui = require('../lib/ui');

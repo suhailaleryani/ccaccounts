@@ -1,9 +1,9 @@
 {
-  "name": "ccswitch",
+  "name": "ccaccounts",
   "version": "1.0.0",
   "description": "Switch between multiple Claude Code accounts (CLI + local web UI). Windows, macOS, Linux.",
   "bin": {
-    "ccswitch": "bin/ccswitch.js"
+    "ccaccounts": "bin/ccaccounts.js"
   },
   "files": [
     "bin",

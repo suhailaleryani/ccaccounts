@@ -8,7 +8,7 @@ const die = (m) => { console.error(m); process.exit(1); };
 const [cmd, ...args] = process.argv.slice(2);
 const flag = (name) => { const i = args.indexOf(name); if (i < 0) return null; return args.splice(i, 2)[1] || ''; };
 
-const HELP = `ccswitch - switch between multiple Claude Code accounts
+const HELP = `ccaccounts - switch between multiple Claude Code accounts
 
   ui [--port N]     open the web UI (account picker)
   list [--json]     list accounts (* = active)
@@ -48,14 +48,14 @@ try {
     case 'ui': {
       const port = Number(flag('--port')) || 4455;
       require('../lib/ui').start({ port }).then(({ url }) => {
-        console.log(`ccswitch UI running at ${url}\nPress Ctrl+C to stop.`);
+        console.log(`ccaccounts UI running at ${url}\nPress Ctrl+C to stop.`);
       }).catch((e) => die(e.message));
       break;
     }
     case 'list': {
       const ps = core.listProfiles();
       if (args.includes('--json')) { console.log(JSON.stringify(ps, null, 2)); break; }
-      if (!ps.length) { console.log('No accounts yet. Try: ccswitch add <name>   (or: ccswitch import <name>)'); break; }
+      if (!ps.length) { console.log('No accounts yet. Try: ccaccounts add <name>   (or: ccaccounts import <name>)'); break; }
       for (const p of ps) {
         const c = chrome.status(p.name);
         const cs = c.extensionInstalled ? 'chrome ext: installed' : c.profileExists ? 'chrome: profile, no extension' : 'chrome: not set up';
@@ -71,7 +71,7 @@ try {
     }
     case 'whoami': {
       const p = core.listProfiles().find((x) => x.active);
-      if (!p) die('No active account. Try: ccswitch add <name>');
+      if (!p) die('No active account. Try: ccaccounts add <name>');
       console.log(`${p.name}${p.email ? '  ' + p.email : ''}`);
       break;
     }
@@ -86,7 +86,7 @@ try {
     case 'import': {
       const r = core.importDefault(args[0]);
       console.log(`Imported your existing login as "${args[0]}".`);
-      if (r.needsLogin) console.log(`No login file found (macOS keeps it in the Keychain). Run: ccswitch login ${args[0]}`);
+      if (r.needsLogin) console.log(`No login file found (macOS keeps it in the Keychain). Run: ccaccounts login ${args[0]}`);
       break;
     }
     case 'login': {
@@ -103,7 +103,7 @@ try {
     case 'run': { const n = args.shift(); process.exitCode = core.runClaude(n, args); break; }
     case 'claude': {
       const n = core.getActive();
-      if (!n) die('No active account. Try: ccswitch add <name>');
+      if (!n) die('No active account. Try: ccaccounts add <name>');
       process.exitCode = core.runClaude(n, args);
       break;
     }
