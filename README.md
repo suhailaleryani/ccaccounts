@@ -69,15 +69,22 @@ ccaccounts share work skills     # share (use "off" to stop)
 
 The first account to share an item donates its copy; later accounts keep their own version beside the link as `<item>.backup-<time>`. Turning sharing off gives that account a private copy. Items are symlinks (directories use junctions on Windows, so no admin rights are needed; files fall back to a hard link). Sharing `settings.json` also shares anything account-specific in it, so check it first. Deleting an account never touches the shared copy. The UI has a **Shared** button per account.
 
+## Account settings, health and sessions
+
+- **Settings** (UI button, or `ccaccounts set <name> <note|color|args|terminal> <value>`): a note, an avatar colour, extra options passed to `claude` when the UI opens a terminal (for example `--model opus`), and on Windows the terminal to use: Command Prompt (default), PowerShell or Windows Terminal. Extra options accept plain flags only (no `; & | " < >`).
+- **Health:** each card shows the plan (from the saved login) and the organisation, and flags **LOGIN EXPIRED** when the saved login can no longer renew itself. An expired access token alone is normal, since Claude Code refreshes it. Your tokens are never sent to the page.
+- **Sessions** (UI button, or `ccaccounts sessions <name>`): the account's recent conversations. Click one to continue it in a new terminal (`claude --resume`).
+
 ## Desktop app
 
 ```bash
 ccaccounts app            # the UI in its own window (no tabs or address bar)
 ccaccounts shortcut       # add a Start Menu launcher (Windows), ~/Applications app (macOS) or .desktop entry (Linux)
 ccaccounts shortcut remove
+ccaccounts autostart      # optional: open the window when you sign in ("autostart off" to undo)
 ```
 
-`app` needs Chrome or Edge (Edge is tried first on Windows; set `CCACCOUNTS_BROWSER` to use another Chromium browser). It runs in its own browser profile, so it doesn't touch your Chrome accounts, and closing the window stops the local server. The macOS and Linux launchers have had little real-world testing.
+`app` needs Chrome or Edge (Edge is tried first on Windows; set `CCACCOUNTS_BROWSER` to use another Chromium browser). It runs in its own browser profile, so it doesn't touch your Chrome accounts, and closing the window stops the local server. The shortcut uses the ccaccounts icon and is also placed on your real Desktop folder, even when OneDrive has moved it. The macOS and Linux launchers have had little real-world testing. There is no tray icon; that would need a bundled runtime such as Electron.
 
 ## Shells
 

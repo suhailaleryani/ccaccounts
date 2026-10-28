@@ -13,6 +13,9 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   ui [--port N]     open the web UI (account picker)
   app               open the UI as a standalone desktop-style window (needs Chrome or Edge)
   shortcut [remove] add (or remove) a Start Menu / Desktop / Applications launcher for \`app\`
+  autostart [off]   open the app window when you sign in to your computer
+  set <name> [note|color|args|terminal <value>]  per-account settings (UI "Settings"); no key shows them
+  sessions <name>   recent Claude Code sessions of an account (resume them from the UI)
   list [--json]     list accounts (* = active)
   use <name>        switch the active account for all new \`claude\` runs
   add <name> [--dir <path>]  create an account; signs in to Claude Code AND Claude in Chrome
@@ -63,9 +66,30 @@ try {
       require('../lib/app').startApp().catch((e) => die(e.message));
       break;
     }
+    case 'autostart': {
+      const on = args[0] !== 'off';
+      const f = require('../lib/app').setAutostart(on);
+      console.log(on ? `ccaccounts will open when you sign in (${f}).` : f ? 'Autostart removed.' : 'Autostart was not enabled.');
+      break;
+    }
+    case 'set': {
+      // ccaccounts set <name> <note|color|args|terminal> <value...>   (empty value clears)
+      if (!core.exists(args[0])) die(`No such account: ${args[0]}`);
+      if (!args[1]) { console.log(JSON.stringify(core.getSettings(args[0]), null, 2)); break; }
+      console.log(JSON.stringify(core.updateSettings(args[0], { [args[1]]: args.slice(2).join(' ') }), null, 2));
+      break;
+    }
+    case 'sessions': {
+      if (!core.exists(args[0])) die(`No such account: ${args[0]}`);
+      const list = require('../lib/sessions').listSessions(args[0]);
+      console.log(list.length ? list.map((s) => `${s.id}  ${new Date(s.mtime).toLocaleString()}  ${s.cwd}\n    ${s.title}`).join('\n')
+        : 'No sessions yet.');
+      break;
+    }
     case 'shortcut': {
       const app = require('../lib/app');
       if (args[0] === 'remove') {
+        app.setAutostart(false);
         const r = app.removeShortcut();
         console.log(r.length ? 'Removed:\n  ' + r.join('\n  ') : 'Nothing to remove.');
       } else {
