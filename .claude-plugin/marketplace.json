@@ -1,0 +1,15 @@
+{
+  "name": "ccaccounts",
+  "owner": { "name": "suhailaleryani" },
+  "metadata": { "description": "Community tools for using several Claude Code accounts side by side. Unofficial; not affiliated with Anthropic." },
+  "plugins": [
+    {
+      "name": "ccaccounts",
+      "source": "./plugin",
+      "description": "Slash commands to see and switch the active ccaccounts account from inside Claude Code (requires the ccaccounts CLI).",
+      "version": "1.0.0",
+      "license": "MIT",
+      "keywords": ["accounts", "account-switcher", "multi-account"]
+    }
+  ]
+}

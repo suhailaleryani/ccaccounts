@@ -33,6 +33,17 @@ ccaccounts ui             # open the account picker, then click "+ Add account"
 
 Needs Node 18+ and git. (It isn't on the npm registry yet, so install straight from GitHub as above.) Prefer a local clone you can edit? `git clone https://github.com/suhailaleryani/ccaccounts && cd ccaccounts && npm install -g .`
 
+## Claude Code plugin (optional)
+
+Add `/accounts` and `/switch-account` slash commands inside Claude Code (needs the CLI installed first):
+
+```
+/plugin marketplace add suhailaleryani/ccaccounts
+/plugin install ccaccounts@ccaccounts
+```
+
+Switching affects new `claude` runs, not the session you are in.
+
 ## Claude in Chrome
 
 `ccaccounts add <name>` (or the UI's **Add account**) also opens a dedicated Chrome profile for that account on claude.ai and the extension's store page, so each account gets its own extension login. Claude Code only connects to the extension when both are signed in to the **same claude.ai account and organization**. ccaccounts can see whether the extension is installed in the profile, but not whether it is signed in. Run `/chrome` inside Claude Code to check the connection. Use `--no-chrome` to skip this step.
