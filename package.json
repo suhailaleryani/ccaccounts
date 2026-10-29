@@ -1,6 +1,6 @@
 {
   "name": "@suhailaleryani/ccaccounts",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Use multiple Claude Code accounts side by side: one-click account switcher with a web UI and desktop window, per-folder accounts, shared settings and Claude in Chrome profiles. Windows, macOS, Linux.",
   "bin": {
     "ccaccounts": "bin/ccaccounts.js"

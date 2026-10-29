@@ -1,6 +1,6 @@
 {
   "name": "ccaccounts",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "See and switch the active ccaccounts account from inside Claude Code. Unofficial community tool; requires the ccaccounts CLI.",
   "author": { "name": "suhailaleryani" },
   "homepage": "https://github.com/suhailaleryani/ccaccounts",

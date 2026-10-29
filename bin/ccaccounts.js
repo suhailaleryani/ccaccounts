@@ -10,7 +10,7 @@ const flag = (name) => { const i = args.indexOf(name); if (i < 0) return null; r
 
 const HELP = `ccaccounts - switch between multiple Claude Code accounts
 
-  ui [--port N]     open the web UI (account picker)
+  ui [--port N] [--lan]  open the web UI (account picker); --lan also lets a paired phone on your Wi-Fi switch accounts (QR pairing)
   app               open the UI as a standalone desktop-style window (needs Chrome or Edge)
   shortcut [remove] add (or remove) a Start Menu / Desktop / Applications launcher for \`app\`
   update [--check] check for a newer ccaccounts and install it (git clone or npm); --check only looks
@@ -72,8 +72,19 @@ try {
   switch (cmd) {
     case 'ui': {
       const port = Number(flag('--port')) || 4455;
-      require('../lib/ui').start({ port }).then(({ url }) => {
+      const lan = args.includes('--lan');
+      require('../lib/ui').start({ port, lan }).then(({ url, makePair }) => {
         console.log(`ccaccounts UI running at ${url}\nPress Ctrl+C to stop.`);
+        if (!lan) return;
+        try {
+          const p = makePair();
+          const qr = require('../lib/qr');
+          const net = p.networks.find((n) => n.address === p.address);
+          console.log(`\nPhone access is ON for this run (same Wi-Fi only, plain http, paired devices only).`);
+          console.log(`Scan with your phone's camera; the code works once and expires in ${p.ttlSec / 60} minutes:\n\n${qr.toTerminal(qr.encode(p.url, 'M'))}\n\n${p.url}`);
+          console.log(`\nNetwork: ${net.name} (${net.address})${p.networks.length > 1 ? '. Phone on a different network? Pick it under Phone in the UI.' : ''}`);
+          console.log('More codes: click Phone in the UI. Windows may ask to allow Node through the firewall: allow it on private networks only.');
+        } catch (e) { console.error(`\nPhone access: ${e.message}`); }
       }).catch((e) => die(e.message));
       break;
     }

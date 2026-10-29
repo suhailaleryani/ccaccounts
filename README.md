@@ -19,7 +19,8 @@ Claude Code signs in to one account at a time. ccaccounts gives each account its
 - **Shared settings:** keep one `CLAUDE.md`, skills, agents and commands across accounts.
 - **Claude in Chrome:** a dedicated Chrome profile per account, so the extension signs in to the same account.
 - **See what each account is doing:** plan, 7-day activity, recent sessions you can resume, and a shortcut to claude.ai's usage page.
-- **Safe and small:** no dependencies, listens on `127.0.0.1` only, never sends your login anywhere.
+- **Works on a phone screen** and, optionally, **from your phone**: pair it with a QR code and switch the active account on your computer from your couch (see below).
+- **Safe and small:** no dependencies, listens on `127.0.0.1` only (unless you turn on phone access), never sends your login anywhere.
 
 Works on Windows, macOS and Linux (Node 18+). Each account is a separate `CLAUDE_CONFIG_DIR` under `~/.ccaccounts/profiles/<name>`.
 
@@ -43,6 +44,23 @@ Add `/accounts` and `/switch-account` slash commands inside Claude Code (needs t
 ```
 
 Switching affects new `claude` runs, not the session you are in.
+
+## From your phone (optional)
+
+The page is laid out for small screens, and you can open it from your phone to see your accounts and **switch the one your computer uses for new `claude` runs**.
+
+```bash
+ccaccounts ui --lan       # prints a QR code; scan it with your phone's camera (same Wi-Fi)
+```
+
+Or click **Phone** in the UI for a fresh code (it lets you pick the network if you have several). What it does and doesn't do:
+
+- **It controls the computer, not the phone's Claude app.** The iOS and Android apps keep their login private to the app, and there is no supported way for another tool to switch it. Switch accounts inside those apps as you normally do.
+- **Off by default.** Without `--lan` the UI listens on `127.0.0.1` only. With it, the UI also listens on your private network, for this run only.
+- **Pairing:** the QR code holds a one-time link that works once and expires after 5 minutes. A paired phone gets a session cookie (7 days, until you click **Disconnect phones** or stop ccaccounts).
+- **Least privilege:** a paired phone can list accounts, see activity and switch the active account. Opening terminals or Chrome, settings, sign-in, removing accounts and creating more pairing codes only work on the computer itself.
+- **Private networks only:** requests from public addresses are refused, and a phone must use the computer's own IP address (this blocks DNS rebinding). It is plain `http`, so use it on a network you trust, not on public Wi-Fi.
+- Windows may ask to let Node through the firewall: allow it on private networks only.
 
 ## Claude in Chrome
 
@@ -156,7 +174,7 @@ After updating ccaccounts, run `ccaccounts install` again so your shell gets the
 
 ## Security
 
-The UI listens on `127.0.0.1` only, rejects non-localhost `Host` headers, and requires a random per-run token on every API call.
+The UI listens on `127.0.0.1` only, rejects non-localhost `Host` headers, and requires a random per-run token on every API call. Phone access (`ccaccounts ui --lan`) is opt-in and limited as described above.
 
 ## Contributing
 
