@@ -9,7 +9,7 @@
 ![node >=18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
 ![platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
-![ccaccounts web UI showing three Claude Code accounts with plan, notes and weekly activity](https://raw.githubusercontent.com/suhailaleryani/ccaccounts/main/docs/screenshot.png)
+![ccaccounts web UI showing three Claude Code accounts with plan, notes, weekly activity and a More menu](https://raw.githubusercontent.com/suhailaleryani/ccaccounts/main/docs/screenshot.png)
 
 Claude Code signs in to one account at a time. ccaccounts gives each account its own login and settings, so you can keep a work and a personal account (and a Claude in Chrome profile for each) without logging out and back in.
 
