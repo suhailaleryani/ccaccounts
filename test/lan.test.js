@@ -119,7 +119,7 @@ test('lan on: pair, switch account from the "phone", everything else refused', {
     const sw = await request(ownIp, port, 'POST', '/api/use', { headers: th, body: { name: 'home' } });
     assert.equal(sw.status, 200); assert.equal(core.getActive(), 'home');
     // Refused from a phone: anything that opens things, edits things, or makes new pairing codes.
-    for (const u of ['/api/open', '/api/add', '/api/remove', '/api/settings', '/api/pair', '/api/unpair', '/api/signin', '/api/cli-save', '/api/update-apply', '/api/resume', '/api/sessions'])
+    for (const u of ['/api/lan', '/api/open', '/api/add', '/api/remove', '/api/settings', '/api/pair', '/api/unpair', '/api/signin', '/api/cli-save', '/api/update-apply', '/api/resume', '/api/sessions'])
       assert.equal((await request(ownIp, port, 'POST', u, { headers: th, body: { name: 'work' } })).status, 403, u);
     assert.equal(core.exists('work'), true);
 
@@ -128,5 +128,28 @@ test('lan on: pair, switch account from the "phone", everything else refused', {
     const un = await request('127.0.0.1', port, 'POST', '/api/unpair', { headers: { 'x-token': lt, host: '127.0.0.1:' + port }, body: {} });
     assert.equal(JSON.parse(un.body).revoked, 1);
     assert.equal((await request(ownIp, port, 'GET', '/api/state', { headers: th })).status, 401);
+  } finally { await new Promise((r) => server.close(r)); }
+});
+
+test('lan: turned on and off from the running UI, and off drops paired phones', { skip: !ownIp && 'no private network address on this machine' }, async () => {
+  const { server } = await ui.start({ port: 0, open: false });            // started WITHOUT --lan
+  const port = server.address().port, lh = { host: '127.0.0.1:' + port };
+  const local = async (url, body) => request('127.0.0.1', port, 'POST', url, { headers: { 'x-token': tokenOf((await request('127.0.0.1', port, 'GET', '/')).body), ...lh }, body });
+  try {
+    assert.equal(JSON.parse((await local('/api/lan', { on: true })).body).lan, true);
+    const pair = JSON.parse((await local('/api/pair', {})).body);
+    const lanPort = Number(new URL(pair.url).port);
+    assert.notEqual(lanPort, port);                                         // a separate listener, the main one stays on loopback
+    const paired = await request(ownIp, lanPort, 'GET', '/pair?code=' + new URL(pair.url).searchParams.get('code'));
+    assert.equal(paired.status, 302);
+    const h = { cookie: paired.headers['set-cookie'][0].split(';')[0] };
+    assert.equal((await request(ownIp, lanPort, 'GET', '/', { headers: h })).status, 200);
+    await assert.rejects(request(ownIp, port, 'GET', '/'), /ECONNREFUSED/); // the loopback listener is still not on the network
+    assert.equal(JSON.parse((await local('/api/lan', { on: false })).body).lan, false);
+    await assert.rejects(request(ownIp, lanPort, 'GET', '/', { headers: h }), /ECONNREFUSED|ECONNRESET/); // listener gone
+    assert.match((await local('/api/pair', {})).body, /Phone access is off/);
+    assert.equal(JSON.parse((await local('/api/lan', { on: true })).body).lan, true);              // and it can be turned on again
+    const again = JSON.parse((await local('/api/pair', {})).body);
+    assert.equal((await request(ownIp, Number(new URL(again.url).port), 'GET', '/', { headers: h })).status, 401); // old session did not survive
   } finally { await new Promise((r) => server.close(r)); }
 });

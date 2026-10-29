@@ -2,7 +2,7 @@
 
 ## 1.1.0
 - Phone-friendly layout.
-- Optional phone access: `ccaccounts ui --lan` (or the Phone button) shows a QR code; a paired phone on the same network can see accounts and switch the active one on the computer. Off by default, one-time pairing, private networks only, limited to a short list of safe calls.
+- Optional phone access: the Phone button (or `ccaccounts ui --lan`) turns it on and shows a QR code, and it can be turned off again while running; a paired phone on the same network can see accounts and switch the active one on the computer. Off by default, one-time pairing, private networks only, limited to a short list of safe calls.
 - Built-in QR encoder (still no dependencies).
 
 ## 1.0.1

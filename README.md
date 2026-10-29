@@ -49,14 +49,10 @@ Switching affects new `claude` runs, not the session you are in.
 
 The page is laid out for small screens, and you can open it from your phone to see your accounts and **switch the one your computer uses for new `claude` runs**.
 
-```bash
-ccaccounts ui --lan       # prints a QR code; scan it with your phone's camera (same Wi-Fi)
-```
-
-Or click **Phone** in the UI for a fresh code (it lets you pick the network if you have several). What it does and doesn't do:
+Click **Phone** in the UI and choose **Turn on phone access**: it shows a QR code, and you scan it with your phone's camera (same Wi-Fi). It lets you pick the network if you have several, and **Turn off** switches it off again. From a terminal, `ccaccounts ui --lan` starts the UI with phone access on and prints the QR code. What it does and doesn't do:
 
 - **It controls the computer, not the phone's Claude app.** The iOS and Android apps keep their login private to the app, and there is no supported way for another tool to switch it. Switch accounts inside those apps as you normally do.
-- **Off by default.** Without `--lan` the UI listens on `127.0.0.1` only. With it, the UI also listens on your private network, for this run only.
+- **Off by default.** Until you turn it on, the UI listens on `127.0.0.1` only. When on, it also listens on your private network, for this run only (closing ccaccounts turns it off).
 - **Pairing:** the QR code holds a one-time link that works once and expires after 5 minutes. A paired phone gets a session cookie (7 days, until you click **Disconnect phones** or stop ccaccounts).
 - **Least privilege:** a paired phone can list accounts, see activity and switch the active account. Opening terminals or Chrome, settings, sign-in, removing accounts and creating more pairing codes only work on the computer itself.
 - **Private networks only:** requests from public addresses are refused, and a phone must use the computer's own IP address (this blocks DNS rebinding). It is plain `http`, so use it on a network you trust, not on public Wi-Fi.
