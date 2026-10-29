@@ -118,6 +118,23 @@ test('installed from GitHub (not on npm): updates from the repo main branch', as
   assert.equal(update.githubRepo(other), '');
 });
 
+test('findGit: PATH wins; run() still finds git when the process PATH is empty or stale', async () => {
+  // a git on PATH is preferred (a stand-in file is enough: we only look it up)
+  const bin = tmp('upd-bin-'), name = process.platform === 'win32' ? 'git.exe' : 'git';
+  fs.writeFileSync(path.join(bin, name), '');
+  assert.equal(update.findGit({ PATH: bin, Path: bin }), path.join(bin, name));
+
+  // the real-world failure: the app was started from a shortcut whose PATH has no git ("spawn git ENOENT")
+  assert.ok(update.findGit(), 'these tests need git installed in a standard place');
+  const key = Object.keys(process.env).find((k) => k.toLowerCase() === 'path') || 'PATH';
+  const old = process.env[key];
+  process.env[key] = '';
+  try {
+    const r = await update.run('git', ['--version']);
+    assert.equal(r.code, 0, r.stderr); assert.match(r.stdout, /git version/);
+  } finally { process.env[key] = old; }
+});
+
 test('unknown install cannot update itself', async () => {
   const dir = tmp('upd-unk-'); setVersion(dir, '1.0.0');
   const c = await update.checkUpdate({ dir, runner: async () => { throw new Error('must not run anything'); } });
