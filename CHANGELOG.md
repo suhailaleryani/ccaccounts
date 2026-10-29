@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+- Fix: on a phone, accounts with long emails, organisation names or folder paths made the cards wider than the screen. They now wrap, and the phone header keeps its title on one line.
+
 ## 1.1.1
 - Fix: a phone that scanned the QR code could land on "This phone is not paired". The pairing cookie is now `SameSite=Lax`, so it survives the redirect when the link is opened from a camera or scanner app.
 
