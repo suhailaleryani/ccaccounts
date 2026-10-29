@@ -104,7 +104,8 @@ test('lan on: pair, switch account from the "phone", everything else refused', {
     const paired = await request(ownIp, port, 'GET', '/pair?code=' + code);
     assert.equal(paired.status, 302);
     const cookie = paired.headers['set-cookie'][0];
-    assert.match(cookie, /HttpOnly/); assert.match(cookie, /SameSite=Strict/);
+    assert.match(cookie, /HttpOnly/); assert.match(cookie, /SameSite=Lax/); // not Strict: it would be dropped when the link is opened from a camera app
+    assert.doesNotMatch(cookie, /Strict/);
     assert.equal((await request(ownIp, port, 'GET', '/pair?code=' + code)).status, 403); // single use
 
     const h = { cookie: cookie.split(';')[0] };
