@@ -131,8 +131,8 @@ ccaccounts autostart      # optional: open the window when you sign in ("autosta
 
 | Shell | How |
 |---|---|
-| bash, zsh, fish, PowerShell | `ccaccounts install` |
-| cmd.exe | can't define functions; type `ccaccounts claude` instead of `claude` (it also honours folder bindings and `ask`) |
+| bash, zsh, fish, PowerShell | `ccaccounts install [shell]`, or the **Terminal** button in the UI (tick shells, Save) |
+| cmd.exe | `ccaccounts install cmd` (or the Terminal button) adds a `doskey` macro through the Command Prompt AutoRun registry value; `ccaccounts uninstall cmd` removes it |
 | IDEs / other tools | `ccaccounts env` prints the line that sets `CLAUDE_CONFIG_DIR` (it doesn't ask; it uses a bound folder's account or the active one) |
 
 After updating ccaccounts, run `ccaccounts install` again so your shell gets the latest wrapper. `ccaccounts uninstall` removes it.

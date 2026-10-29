@@ -34,7 +34,7 @@ const HELP = `ccaccounts - switch between multiple Claude Code accounts
   run <name> ...    run claude once as another account
   claude ...        run claude as the active account (works in cmd.exe)
   remove <name>     delete an account and its saved login
-  install [shell]   add the claude wrapper to your shell profile
+  install [shell]   add the claude wrapper to your shell profile (bash, zsh, fish, powershell, cmd)
   uninstall [shell] remove it
   hook [shell]      print the wrapper (bash, zsh, fish, powershell)
   env [shell]       print the line that sets CLAUDE_CONFIG_DIR (for IDEs/scripts)`;
